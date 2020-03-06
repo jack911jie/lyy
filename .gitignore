@@ -3,5 +3,6 @@
 *.doc
 *.docx
 *.xlsx
+!收入计算表.xlsx
 *.xls
 
