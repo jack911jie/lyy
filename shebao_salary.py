@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[4]:
 
 
 import os
@@ -14,7 +14,10 @@ from openpyxl.styles import PatternFill
 from tqdm import tqdm
 import time
 import logging
+import win32com.client as win32
+import warnings
 
+warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(funcName)s-%(lineno)d - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -62,15 +65,17 @@ class ShebaoSalaryTable:
         toWriteXl=openpyxl.load_workbook(self.fn_slry)
         sht=toWriteXl['资管']   
         
-        
-        for rr in tqdm(range(0,r)):
+        print('\n')
+        for i,rr in enumerate(range(0,r)):
             for cc in range(0,c-1):
                 sht.cell(rr+6,5+cc).value=output[rr][cc+1]
+#             print("进度:{0}%".format(round((i + 1) * 100 / r)), end="\r")
+            progress(int(i*100/(r-1)))
             time.sleep(0.2)
 
         toWriteXl.save(self.fn_slry[0:-5]+'_自动填报.xlsx')
         
-        print('完成自动填报。保存文件名为：{}'.format(self.fn_slry[0:-5]+'_自动填报.xlsx'))
+        print('\n完成自动填报。保存文件名为：{}'.format(self.fn_slry[0:-5]+'_自动填报.xlsx'))
     
     def compare(self):
         print('正在比对数据……',end='')
@@ -115,16 +120,36 @@ class ShebaoSalaryTable:
         
         
         if addr_dif:
-            for rows in tqdm(addr_dif):
+            N=len(addr_dif)
+            print('\n')
+            for i,rows in enumerate(addr_dif):
                 sht.cell(rows[0]+6,rows[1]+3).value=str(sht.cell(rows[0]+6,rows[1]+3).value)+'<'+str(rows[2])+'>'
                 sht.cell(rows[0]+6,rows[1]+3).fill=fillColor
+                progress(int(i*100/(N-1)))
+                time.sleep(0.2)
                 
             toMark.save(self.fn_slry[0:-5]+'_标记不同.xlsx')
-            print('共发现异常数据{}条，已做颜色标记。保存文件名为：{}'.format(len(addr_dif),self.fn_slry[0:-5]+'_标记不同.xlsx'))
-            time.sleep(0.2)
+            print('\n共发现异常数据{}条，已做颜色标记。保存文件名为：{}'.format(len(addr_dif),self.fn_slry[0:-5]+'_标记不同.xlsx'))
+            
         else:
-            print('未发现不同的数据。')     
-        
+            print('\n未发现不同的数据。')     
+    
+def XlsToXlsx(fn):  
+    print('\nxls是旧版excel文件，正在转换……',end='')
+    fname=os.path.join(os.getcwd(),fn)
+    excel = win32.gencache.EnsureDispatch('Excel.Application')
+    wb = excel.Workbooks.Open(fname)
+    wb.SaveAs(fname+'x', FileFormat = 51)              # 转成xlsx格式，路径在原路径下
+    wb.Close()                               
+    excel.Application.Quit()
+    print('转换完成\n')
+    
+def progress(percent=0, width=30):
+    left = width * percent // 100
+    right = width - left
+    print('\r[', '#' * left, ' ' * right, ']',
+          f' {percent:.0f}%',
+          sep='', end='', flush=True)
     
 if __name__=='__main__':
     while True:
@@ -140,6 +165,11 @@ if __name__=='__main__':
             nameSb=dftSbName
         if nameSlry=='':
             nameSlry=dftSlryName
+        else:
+            if nameSlry[-3:]=='xls':
+                XlsToXlsx(nameSlry)
+                nameSlry=nameSlry+'x'
+            
         if slct=='':
             slct='1'
             t='操作：1.将社保数据写入薪酬表\n'
@@ -155,9 +185,12 @@ if __name__=='__main__':
     sb=ShebaoSalaryTable(nameSb,nameSlry)
     if slct=='1':
         sb.WriteToSalary()
+        input('\n回车退出')
     elif slct=='2':
         sb.compare()
+        input('\n回车退出')
     else:
-        print('没有该选项')
+        print('\n没有该选项')
+        input('\n回车退出')
         sys.exit(0)
 
