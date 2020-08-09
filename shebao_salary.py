@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[ ]:
 
 
 import os
@@ -14,8 +14,12 @@ from openpyxl.styles import PatternFill
 from tqdm import tqdm
 import time
 import logging
-import win32com.client as win32
 import warnings
+try:
+    import win32com.client as win32
+except:
+    pass
+
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(funcName)s-%(lineno)d - %(message)s')
