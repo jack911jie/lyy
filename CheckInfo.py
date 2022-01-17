@@ -44,6 +44,8 @@ class Infos:
                     y=datetime.today().year
                     if int(meet_year)!=y:
                         verify_date='yes'
+                    else:
+                        verify_date='no'
 
                 break
             
@@ -53,11 +55,11 @@ class Infos:
     def check_info_dir(self,dirname):
         fns=[]
         for fn in os.listdir(dirname):
-            if fn[-4:].lower()=='docx':
+            if fn[-4:].lower()=='docx' and '$' not in fn:
                 fns.append(os.path.join(dirname,fn))
         for info in fns:
             info_fn=info.split('\\')[-1]
-            print('正在检查 {} ------>>'.format(info_fn))
+            print('\n正在检查 {} ------>>'.format(info_fn))
             res=self.check_date(info)
             print('结果：')
             print('会议日期：',res['mt_date'])
